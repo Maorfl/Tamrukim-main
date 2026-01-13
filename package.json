@@ -1,0 +1,67 @@
+{
+  "name": "tamrukim-main",
+  "version": "1.0.0",
+  "description": "A full-stack MERN application for managing cosmetic licenses with search functionality and PDF downloads.",
+  "main": "electron/main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && cross-env BROWSER=none npm start",
+    "electron:dev": "cross-env NODE_ENV=development electron .",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"wait-on http://localhost:3000 && npm run electron:dev\"",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Maorfl/Tamrukim-main.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Maorfl/Tamrukim-main/issues"
+  },
+  "homepage": "https://github.com/Maorfl/Tamrukim-main#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.4.0",
+    "wait-on": "^9.0.3"
+  },
+  "build": {
+    "appId": "com.maorfl.tamrukim",
+    "productName": "Tamrukim Manager",
+    "files": [
+      "electron/**/*",
+      "frontend/build/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "extraResources": [
+      {
+        "from": "backend",
+        "to": "backend",
+        "filter": [
+          "dist/**/*",
+          "package.json",
+          "node_modules/**/*",
+          "uploads/**/*",
+          ".env"
+        ]
+      },
+      {
+        "from": "python_scripts",
+        "to": "python_scripts"
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}
