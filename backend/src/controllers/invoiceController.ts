@@ -61,12 +61,28 @@ export const processInvoice = async (req: Request, res: Response) => {
 
         const filePath = req.file.path;
 
-        const scriptPath = path.resolve(process.cwd(), '../python_scripts/extract_numbers.py');
-        if (!fs.existsSync(scriptPath)) {
-            return res.status(500).json({ error: 'Internal server configuration error: Script missing' });
+        // Determine executable or script path
+        let executablePath = path.resolve(process.cwd(), '../python_scripts/dist/extract_numbers.exe');
+        
+        // In production (Electron packaged), paths might be different. 
+        // We can check environment variable from Electron or check resources path.
+        if (process.env.PYTHON_SCRIPTS_PATH) {
+            executablePath = path.join(process.env.PYTHON_SCRIPTS_PATH, 'dist', 'extract_numbers.exe');
         }
 
-        const pythonProcess = spawn('python', [scriptPath, filePath]);
+        const scriptPath = path.resolve(process.cwd(), '../python_scripts/extract_numbers.py');
+        
+        let pythonProcess;
+        
+        if (fs.existsSync(executablePath)) {
+            console.log('Using Python Executable:', executablePath);
+            pythonProcess = spawn(executablePath, [filePath]);
+        } else if (fs.existsSync(scriptPath)) {
+             console.log('Using Python Script:', scriptPath);
+             pythonProcess = spawn('python', [scriptPath, filePath]);
+        } else {
+            return res.status(500).json({ error: 'Internal server configuration error: Extraction utility missing' });
+        }
 
         let resultData = '';
         let errorData = '';
