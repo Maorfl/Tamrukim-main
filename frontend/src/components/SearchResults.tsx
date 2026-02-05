@@ -28,7 +28,7 @@ const SearchResults: React.FC<SearchResultsProps> = ({ licenses, isLoading, hasS
 
     if (!hasSearched) {
         return (
-            <div className="text-center py-16 animate-fadeIn">
+            <div className="text-center py-10 animate-fadeIn">
                 <div className="inline-block p-6 bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl">
                     <svg className="w-24 h-24 mx-auto mb-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

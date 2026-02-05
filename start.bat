@@ -1,26 +1,8 @@
 @echo off
-echo ========================================
-echo Starting Cosmetic License System
-echo ========================================
-echo.
+setlocal
 
-echo Starting MongoDB (if not already running)...
-echo Make sure MongoDB is running on mongodb://localhost:27017
-echo.
+rem Launch a single minimized PowerShell window that runs both servers
+set "ROOT=%~dp0"
+start "Cosmetic License" /min powershell -NoLogo -NoExit -Command "& { cd '%ROOT%'; $npm = 'npm.cmd'; if (-not (Get-Command $npm -ErrorAction SilentlyContinue)) { Write-Error 'npm.cmd not found. Ensure Node.js is installed and PATH is set.'; exit 1 }; Write-Host 'Starting Cosmetic License System...'; Write-Host 'Backend -> http://localhost:5000'; Write-Host 'Frontend -> http://localhost:3000'; Write-Host ''; $backend = Start-Process $npm -ArgumentList 'run','dev' -WorkingDirectory (Join-Path $PWD 'backend') -NoNewWindow -PassThru; Start-Sleep -Seconds 3; $frontend = Start-Process $npm -ArgumentList 'start' -WorkingDirectory (Join-Path $PWD 'frontend') -NoNewWindow -PassThru; Write-Host 'Both servers running. Close this window to stop them.'; $ids = @(); if ($backend) { $ids += $backend.Id }; if ($frontend) { $ids += $frontend.Id }; if ($ids.Count -gt 0) { Wait-Process -Id $ids } }
 
-echo Starting Backend Server...
-start "Backend Server" cmd /k "cd backend && npm run dev"
-timeout /t 3 /nobreak > nul
-
-echo Starting Frontend Server...
-start "Frontend Server" cmd /k "cd frontend && npm start"
-
-echo.
-echo ========================================
-echo Both servers are starting...
-echo ========================================
-echo Backend: http://localhost:5000
-echo Frontend: http://localhost:3000
-echo.
-echo Press any key to close this window (servers will keep running)
-pause > nul
+endlocal

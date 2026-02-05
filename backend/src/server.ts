@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import licenseRoutes from './routes/licenseRoutes';
 import invoiceRoutes from './routes/invoiceRoutes';
+import historyRoutes from './routes/historyRoutes';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Routes
 app.use('/api/licenses', licenseRoutes);
 app.use('/api', invoiceRoutes);
+app.use('/api/history', historyRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
