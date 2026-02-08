@@ -32,9 +32,11 @@
         "from": "backend",
         "to": "backend",
         "filter": [
-          "**/*",
-          "!node_modules",
-          "!node_modules/**/*"
+          "dist/**/*",
+          "package.json",
+          "node_modules/**/*",
+          "uploads/**/*",
+          ".env"
         ]
       },
       {

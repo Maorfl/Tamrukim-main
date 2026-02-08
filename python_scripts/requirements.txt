@@ -2,4 +2,3 @@ easyocr
 pdf2image
 numpy
 opencv-python
-pdfplumber

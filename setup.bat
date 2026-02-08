@@ -26,6 +26,16 @@ if %errorlevel% neq 0 (
 echo Frontend dependencies installed successfully!
 echo.
 
+echo Step 3: Building Python Executable...
+cd ..\python_scripts
+call build_exe.bat
+if %errorlevel% neq 0 (
+    echo WARNING: Python build failed. The app might require manual python setup.
+) else (
+    echo Python executable built successfully!
+)
+echo.
+
 echo ========================================
 echo Setup Complete!
 echo ========================================
