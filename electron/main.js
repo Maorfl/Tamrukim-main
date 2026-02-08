@@ -1,15 +1,31 @@
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
-const { spawn } = require('child_process');
+const { fork, spawn } = require('child_process');
 const fs = require('fs');
 
 let mainWindow;
 let backendProcess;
+let devProcesses = [];
 
 const isDev = !app.isPackaged;
-// In dev, we expect backend on 5000 and frontend on 3000 (usually)
-// In prod, we'll spawn backend on 5000 (or random) and serve static frontend
 const BACKEND_PORT = 5000;
+
+// פונקציית לוגים לדיבוג ב-Production
+const logPath = path.join(app.getPath('userData'), 'server.log');
+
+function logToFile(message) {
+    try {
+        const logDir = path.dirname(logPath);
+        if (!fs.existsSync(logDir)) {
+            fs.mkdirSync(logDir, { recursive: true });
+        }
+        const timestamp = new Date().toISOString();
+        fs.appendFileSync(logPath, `${timestamp} - ${message}\n`);
+    } catch (error) {
+        // Fallback or ignore logging error to prevent app crash
+        console.error('Log failure:', error);
+    }
+}
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -18,77 +34,94 @@ function createWindow() {
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
-            preload: path.join(__dirname, 'preload.js')
+            preload: path.join(__dirname, 'preload.js') // וודא שקיים קובץ כזה
         },
     });
 
     if (isDev) {
-        // Development
         mainWindow.loadURL('http://localhost:3000');
-        mainWindow.webContents.openDevTools();
     } else {
-        // Production
-        // Adjust logic to point to the React build's index.html
-        // We assume the build folder is copied to 'frontend-build' in the resources
-        mainWindow.loadFile(path.join(__dirname, '../frontend/build/index.html'));
+        // ב-Production, הקבצים נמצאים בתוך תיקיית ה-Resources
+        const indexPath = path.join(__dirname, '..', 'frontend', 'build', 'index.html');
+        mainWindow.loadFile(indexPath).catch(err => logToFile(`Load Error: ${err.message}`));
     }
-
-    mainWindow.on('closed', () => {
-        mainWindow = null;
-    });
 }
 
 function startBackend() {
     if (isDev) {
-        console.log('In Dev mode: assuming backend is running separately or via concurrently.');
+        // בפיתוח, מריצים את שני השרתים
+        const backendDir = path.join(__dirname, '..', 'backend');
+        const frontendDir = path.join(__dirname, '..', 'frontend');
+
+        // Start backend
+        const backendProc = spawn('npm', ['run', 'dev'], {
+            cwd: backendDir,
+            shell: true,
+            stdio: 'ignore'
+        });
+        devProcesses.push(backendProc);
+
+        // Start frontend
+        const frontendProc = spawn('npm', ['start'], {
+            cwd: frontendDir,
+            shell: true,
+            env: { ...process.env, BROWSER: 'none' },
+            stdio: 'ignore'
+        });
+        devProcesses.push(frontendProc);
+
         return;
     }
 
-    // In production, the backend is in the 'resources' folder
+    // נתיב לשרת ה-Node בתוך האפליקציה הארוזה
+    const backendScript = path.join(process.resourcesPath, 'backend', 'dist', 'server.js');
     const backendDir = path.join(process.resourcesPath, 'backend');
-    const backendScript = path.join(backendDir, 'dist', 'server.js');
 
-    console.log('Starting backend from:', backendScript);
+    if (!fs.existsSync(backendScript)) {
+        logToFile(`Backend Missing: ${backendScript}`);
+        return;
+    }
 
-    // We use 'fork' to use Electron's internal Node.js runtime to execute the script
-    // This avoids needing a separate 'node' executable bundled
-    backendProcess = require('child_process').fork(backendScript, [], {
-        cwd: backendDir, // Important: so backend can find .env and uploads/ relative to itself
-        env: {
-            ...process.env,
-            PORT: BACKEND_PORT,
-            // We can force variables here if needed, or rely on .env loading
-            ELECTRON_RUN: 'true'
-        }
-    });
+    try {
+        backendProcess = fork(backendScript, [], {
+            cwd: backendDir,
+            env: {
+                ...process.env,
+                PORT: BACKEND_PORT,
+                NODE_ENV: 'production',
+                PYTHON_SCRIPTS_PATH: path.join(process.resourcesPath, 'python_scripts')
+            },
+            stdio: 'pipe'
+        });
 
-    backendProcess.on('message', (msg) => {
-        console.log('Backend message:', msg);
-    });
-
-    backendProcess.on('error', (err) => {
-        console.error('Backend failed to start:', err);
-    });
+        backendProcess.stdout.on('data', (data) => logToFile(`[STDOUT]: ${data}`));
+        backendProcess.stderr.on('data', (data) => logToFile(`[STDERR]: ${data}`));
+    } catch (e) {
+        logToFile(`Spawn Error: ${e.message}`);
+    }
 }
 
 app.on('ready', () => {
+    logToFile('--- App Launch ---');
     startBackend();
-    // Give backend a moment to start? Or just start window immediately (backend connects async)
-    // We could use 'wait-on' logic here too, but simple usually works.
-    setTimeout(createWindow, 1000);
+    setTimeout(createWindow, 1000); // השהיה קטנה לביטחון
 });
 
 app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        app.quit();
-    }
-    if (backendProcess) {
-        backendProcess.kill();
-    }
+    if (process.platform !== 'darwin') app.quit();
 });
 
-app.on('activate', () => {
-    if (mainWindow === null) {
-        createWindow();
-    }
+app.on('before-quit', () => {
+    if (backendProcess) backendProcess.kill();
+    devProcesses.forEach(proc => {
+        try {
+            if (process.platform === 'win32') {
+                spawn('taskkill', ['/pid', proc.pid, '/f', '/t']);
+            } else {
+                proc.kill();
+            }
+        } catch (e) {
+            logToFile(`Kill Error: ${e.message}`);
+        }
+    });
 });

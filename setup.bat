@@ -5,7 +5,7 @@ echo ========================================
 echo.
 
 echo Step 1: Installing Backend Dependencies...
-cd backend
+cd /d "%~dp0backend"
 call npm install
 if %errorlevel% neq 0 (
     echo ERROR: Backend installation failed!
@@ -16,7 +16,7 @@ echo Backend dependencies installed successfully!
 echo.
 
 echo Step 2: Installing Frontend Dependencies...
-cd ..\frontend
+cd /d "%~dp0frontend"
 call npm install
 if %errorlevel% neq 0 (
     echo ERROR: Frontend installation failed!
