@@ -46,17 +46,14 @@ function App() {
     ];
 
     return (
-        <div className="min-h-screen py-2 px-4 flex flex-col">
+        <div className="min-h-screen py-1 px-4 flex flex-col">
             <div className="max-w-7xl mx-auto flex-1 flex flex-col w-full">
                 {/* Header */}
                 <header className="text-center mb-3 animate-fadeIn">
-                    <div className="inline-block p-4 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl">
-                        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent mb-3 font-hebrew">
+                    <div className="inline-block p-3 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl">
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent font-hebrew">
                             מערכת רישיונות קוסמטיקה
                         </h1>
-                        <p className="text-gray-600 text-lg font-hebrew" dir="rtl">
-                            חפש והורד רישיונות קוסמטיקה בקלות
-                        </p>
                     </div>
                 </header>
 
