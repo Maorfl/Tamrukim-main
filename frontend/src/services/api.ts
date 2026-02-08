@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { SearchResponse } from '../types/License';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 
 export const licenseAPI = {
     search: async (query: string): Promise<SearchResponse> => {
@@ -20,3 +20,28 @@ export const licenseAPI = {
         return `${API_BASE_URL.replace('/api', '')}/uploads/${licenseNumber}.pdf`;
     }
 };
+
+export const historyAPI = {
+    getAll: async (limit?: number) => {
+        const response = await axios.get(`${API_BASE_URL}/history`, {
+            params: { limit }
+        });
+        return response.data;
+    },
+
+    getById: async (id: string) => {
+        const response = await axios.get(`${API_BASE_URL}/history/${id}`);
+        return response.data;
+    },
+
+    create: async (data: { caseNumber: string; licenseIds: string[]; fileName: string }) => {
+        const response = await axios.post(`${API_BASE_URL}/history`, data);
+        return response.data;
+    },
+
+    delete: async (id: string) => {
+        const response = await axios.delete(`${API_BASE_URL}/history/${id}`);
+        return response.data;
+    }
+};
+
