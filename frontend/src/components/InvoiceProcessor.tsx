@@ -290,13 +290,6 @@ const InvoiceProcessor = () => {
                             onChange={handleFileChange}
                             className="hidden"
                         />
-                        
-                        <button
-                            onClick={() => document.getElementById('invoice-upload')?.click()}
-                            className="mt-3 w-full py-2 rounded-lg font-semibold font-hebrew bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-                        >
-                            בחר קובץ
-                        </button>
 
                         <button
                             onClick={handleUpload}

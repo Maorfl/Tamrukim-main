@@ -46,22 +46,19 @@ function App() {
     ];
 
     return (
-        <div className="min-h-screen py-3 px-4">
-            <div className="max-w-7xl mx-auto">
+        <div className="min-h-screen py-1 px-4 flex flex-col">
+            <div className="max-w-7xl mx-auto flex-1 flex flex-col w-full">
                 {/* Header */}
-                <header className="text-center mb-4 animate-fadeIn">
-                    <div className="inline-block p-6 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl">
-                        <h1 className="text-5xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent mb-3 font-hebrew">
+                <header className="text-center mb-3 animate-fadeIn">
+                    <div className="inline-block p-3 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl">
+                        <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent font-hebrew">
                             מערכת רישיונות קוסמטיקה
                         </h1>
-                        <p className="text-gray-600 text-lg font-hebrew" dir="rtl">
-                            חפש והורד רישיונות קוסמטיקה בקלות
-                        </p>
                     </div>
                 </header>
 
                 {/* Tabs Navigation */}
-                <div className="mb-4 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-2 inline-flex gap-2 mx-auto" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                <div className="mb-3 bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg p-2 inline-flex gap-2 mx-auto" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
                     <div className="inline-flex gap-2 mx-auto">
                         {tabs.map((tab) => (
                             <button
@@ -69,7 +66,7 @@ function App() {
                                 onClick={() => {
                                     setActiveTab(tab.id)
                                     if(tab.onclick) tab.onclick();}}
-                                className={`px-6 py-3 rounded-xl font-bold font-hebrew transition-all ${
+                                className={`px-6 py-1.5 rounded-xl text-center font-bold font-hebrew transition-all ${
                                     activeTab === tab.id
                                         ? 'bg-indigo-600 text-white shadow-lg'
                                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -83,7 +80,7 @@ function App() {
                 </div>
 
                 {/* Tab Content */}
-                <div>
+                <div className="flex-1">
                     <div className={activeTab === 'invoice' ? 'block animate-fadeIn' : 'hidden'}>
                         <InvoiceProcessor />
                     </div>
@@ -126,10 +123,10 @@ function App() {
                 </div>
 
                 {/* Footer */}
-                <footer className="mt-16 text-center animate-fadeIn">
-                    <div className="inline-block px-6 py-4 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg">
+                <footer className="mt-auto pt-4 text-center animate-fadeIn">
+                    <div className="inline-block px-6 py-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg">
                         <p className="text-gray-600 font-hebrew" dir="rtl">
-                            מערכת ניהול רישיונות קוסמטיקה © 2025
+                            כספי סוכני מכס ושילוח בינלאומי © 2026
                         </p>
                     </div>
                 </footer>
