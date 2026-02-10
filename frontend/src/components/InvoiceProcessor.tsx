@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 interface ScanResultRow {
@@ -20,10 +20,27 @@ const InvoiceProcessor = () => {
     const [loading, setLoading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
 
-    // Basket State
-    const [totalCollected, setTotalCollected] = useState(0);
-    const [scanResults, setScanResults] = useState<ScanResultRow[]>([]);
-    const [fileBatches, setFileBatches] = useState<FileBatch[]>([]);
+    // Basket State - Initialize from sessionStorage
+    const [totalCollected, setTotalCollected] = useState(() => {
+        const saved = sessionStorage.getItem('totalCollected');
+        return saved ? parseInt(saved, 10) : 0;
+    });
+    const [scanResults, setScanResults] = useState<ScanResultRow[]>(() => {
+        const saved = sessionStorage.getItem('scanResults');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [fileBatches, setFileBatches] = useState<FileBatch[]>(() => {
+        const saved = sessionStorage.getItem('fileBatches');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            // Convert timestamp strings back to Date objects
+            return parsed.map((batch: any) => ({
+                ...batch,
+                timestamp: new Date(batch.timestamp)
+            }));
+        }
+        return [];
+    });
 
     const [error, setError] = useState<string | null>(null);
     const [statusMessage, setStatusMessage] = useState<string>("");
@@ -31,6 +48,19 @@ const InvoiceProcessor = () => {
     // Modal states
     const [showCaseModal, setShowCaseModal] = useState(false);
     const [caseNumber, setCaseNumber] = useState('');
+
+    // Save to sessionStorage whenever data changes
+    useEffect(() => {
+        sessionStorage.setItem('totalCollected', totalCollected.toString());
+    }, [totalCollected]);
+
+    useEffect(() => {
+        sessionStorage.setItem('scanResults', JSON.stringify(scanResults));
+    }, [scanResults]);
+
+    useEffect(() => {
+        sessionStorage.setItem('fileBatches', JSON.stringify(fileBatches));
+    }, [fileBatches]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {

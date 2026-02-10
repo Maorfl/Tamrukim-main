@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SearchBar from './components/SearchBar';
 import SearchResults from './components/SearchResults';
 import { License } from './types/License';
@@ -10,12 +10,47 @@ import History from './components/History';
 type TabType = 'invoice' | 'license' | 'search' | 'history';
 
 function App() {
-    const [activeTab, setActiveTab] = useState<TabType>('invoice');
-    const [licenses, setLicenses] = useState<License[]>([]);
+    const [activeTab, setActiveTab] = useState<TabType>(() => {
+        const saved = sessionStorage.getItem('activeTab');
+        return (saved as TabType) || 'invoice';
+    });
+    const [licenses, setLicenses] = useState<License[]>(() => {
+        const saved = sessionStorage.getItem('licenses');
+        return saved ? JSON.parse(saved) : [];
+    });
     const [isLoading, setIsLoading] = useState(false);
-    const [hasSearched, setHasSearched] = useState(false);
+    const [hasSearched, setHasSearched] = useState(() => {
+        const saved = sessionStorage.getItem('hasSearched');
+        return saved === 'true';
+    });
     const [error, setError] = useState<string | null>(null);
     const [historyRenderKey, setHistoryRenderKey] = useState<boolean>(false); // To force re-render History component
+
+    // Load data from sessionStorage on mount
+    useEffect(() => {
+        const savedActiveTab = sessionStorage.getItem('activeTab');
+        const savedLicenses = sessionStorage.getItem('licenses');
+        const savedHasSearched = sessionStorage.getItem('hasSearched');
+
+        if (savedActiveTab) setActiveTab(savedActiveTab as TabType);
+        if (savedLicenses) setLicenses(JSON.parse(savedLicenses));
+        if (savedHasSearched) setHasSearched(savedHasSearched === 'true');
+    }, []);
+
+    // Save activeTab to sessionStorage whenever it changes
+    useEffect(() => {
+        sessionStorage.setItem('activeTab', activeTab);
+    }, [activeTab]);
+
+    // Save licenses to sessionStorage whenever they change
+    useEffect(() => {
+        sessionStorage.setItem('licenses', JSON.stringify(licenses));
+    }, [licenses]);
+
+    // Save hasSearched to sessionStorage whenever it changes
+    useEffect(() => {
+        sessionStorage.setItem('hasSearched', String(hasSearched));
+    }, [hasSearched]);
 
     const handleSearch = async (query: string) => {
         setIsLoading(true);
@@ -49,7 +84,7 @@ function App() {
         <div className="min-h-screen py-1 px-4 flex flex-col">
             <div className="max-w-7xl mx-auto flex-1 flex flex-col w-full">
                 {/* Header */}
-                <header className="text-center mb-3 animate-fadeIn">
+                <header className="text-center mb-3">
                     <div className="inline-block p-3 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl">
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-primary-600 to-purple-600 bg-clip-text text-transparent font-hebrew">
                             מערכת רישיונות קוסמטיקה
@@ -123,7 +158,7 @@ function App() {
                 </div>
 
                 {/* Footer */}
-                <footer className="mt-auto pt-4 text-center animate-fadeIn">
+                <footer className="mt-auto pt-4 text-center">
                     <div className="inline-block px-6 py-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg">
                         <p className="text-gray-600 font-hebrew" dir="rtl">
                             כספי סוכני מכס ושילוח בינלאומי © 2026
