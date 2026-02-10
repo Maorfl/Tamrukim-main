@@ -378,7 +378,7 @@ const InvoiceProcessor = () => {
                                 <tr>
                                     <th className="px-4 py-3 text-sm font-bold text-gray-600 font-hebrew">מק"ט (ID)</th>
                                     <th className="px-4 py-3 text-sm font-bold text-gray-600 font-hebrew">שם תמרוק</th>
-                                    <th className="px-4 py-3 text-sm font-bold text-gray-600 font-hebrew">מספר רישיון נקי</th>
+                                    <th className="px-4 py-3 text-sm font-bold text-gray-600 font-hebrew">מספר רישיון</th>
                                     <th className="px-4 py-3 text-sm font-bold text-gray-600 font-hebrew">נוטיפיקציה</th>
                                     <th className="px-4 py-3 text-sm font-bold text-gray-600 font-hebrew">סטטוס</th>
                                 </tr>
