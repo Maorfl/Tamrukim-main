@@ -1,9 +1,11 @@
 import { Request, Response } from 'express';
 import History from '../models/History';
+import fs from 'fs-extra';
+import path from 'path';
 
 export const createHistoryEntry = async (req: Request, res: Response) => {
     try {
-        const { caseNumber, licenseIds, fileName } = req.body;
+        const { caseNumber, licenseIds, fileName, filePath } = req.body;
 
         if (!caseNumber || !licenseIds || !Array.isArray(licenseIds) || licenseIds.length === 0) {
             return res.status(400).json({ error: 'Invalid data: caseNumber and licenseIds are required' });
@@ -12,7 +14,8 @@ export const createHistoryEntry = async (req: Request, res: Response) => {
         const historyEntry = new History({
             caseNumber,
             licenseIds,
-            fileName: fileName || `merged_licenses_${Date.now()}.pdf`
+            fileName: fileName || `merged_licenses_${Date.now()}.pdf`,
+            filePath: filePath || undefined
         });
 
         await historyEntry.save();
@@ -73,6 +76,11 @@ export const deleteHistoryEntry = async (req: Request, res: Response) => {
             return res.status(404).json({ error: 'History entry not found' });
         }
 
+        // Delete the associated PDF file if it exists
+        if (deleted.filePath && await fs.pathExists(deleted.filePath)) {
+            await fs.unlink(deleted.filePath);
+        }
+
         res.json({
             success: true,
             message: 'History entry deleted'
@@ -80,5 +88,30 @@ export const deleteHistoryEntry = async (req: Request, res: Response) => {
     } catch (error) {
         console.error('Error deleting history entry:', error);
         res.status(500).json({ error: 'Failed to delete history entry' });
+    }
+};
+
+export const downloadHistoryPdf = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const historyEntry = await History.findById(id);
+
+        if (!historyEntry) {
+            return res.status(404).json({ error: 'History entry not found' });
+        }
+
+        if (!historyEntry.filePath || !(await fs.pathExists(historyEntry.filePath))) {
+            return res.status(404).json({ error: 'PDF file not found' });
+        }
+
+        const fileBuffer = await fs.readFile(historyEntry.filePath);
+        
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=${historyEntry.fileName}`);
+        res.send(fileBuffer);
+
+    } catch (error) {
+        console.error('Error downloading history PDF:', error);
+        res.status(500).json({ error: 'Failed to download PDF' });
     }
 };

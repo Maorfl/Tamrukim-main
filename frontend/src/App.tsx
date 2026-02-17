@@ -25,6 +25,8 @@ function App() {
     });
     const [error, setError] = useState<string | null>(null);
     const [historyRenderKey, setHistoryRenderKey] = useState<boolean>(false); // To force re-render History component
+    const [licenseIdsToLoad, setLicenseIdsToLoad] = useState<string[]>([]);
+    const [caseNumber, setCaseNumber] = useState<string>('');
 
     // Load data from sessionStorage on mount
     useEffect(() => {
@@ -73,6 +75,11 @@ function App() {
         setHistoryRenderKey(!historyRenderKey); // Toggle to force re-render
     }
 
+    const handleEditHistory = (licenseIds: string[]) => {
+        setLicenseIdsToLoad(licenseIds);
+        setActiveTab('invoice');
+    };
+
     const tabs = [
         { id: 'invoice' as TabType, label: 'הפקת רישיונות', icon: '📄' },
         { id: 'license' as TabType, label: 'העלאת רישיון חדש', icon: '📤' },
@@ -117,7 +124,7 @@ function App() {
                 {/* Tab Content */}
                 <div className="flex-1">
                     <div className={activeTab === 'invoice' ? 'block animate-fadeIn' : 'hidden'}>
-                        <InvoiceProcessor />
+                        <InvoiceProcessor licenseIdsToLoad={licenseIdsToLoad} onLoadComplete={() => setLicenseIdsToLoad([])} caseNumberToLoad={caseNumber}/>
                     </div>
 
                     <div className={activeTab === 'license' ? 'flex justify-center animate-fadeIn' : 'hidden'}>
@@ -153,7 +160,7 @@ function App() {
                     </div>
 
                     <div className={activeTab === 'history' ? 'block animate-fadeIn' : 'hidden'}>
-                        <History historyRenderKey={historyRenderKey} />
+                        <History historyRenderKey={historyRenderKey} onEditHistory={handleEditHistory} setCaseNumber={setCaseNumber} />
                     </div>
                 </div>
 

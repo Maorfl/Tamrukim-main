@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 
 interface ScanResultRow {
@@ -15,7 +15,13 @@ interface FileBatch {
     results: ScanResultRow[];
 }
 
-const InvoiceProcessor = () => {
+interface InvoiceProcessorProps {
+    licenseIdsToLoad?: string[];
+    onLoadComplete?: () => void;
+    caseNumberToLoad?: string;
+}
+
+const InvoiceProcessor = ({ licenseIdsToLoad = [], onLoadComplete, caseNumberToLoad }: InvoiceProcessorProps) => {
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
@@ -61,6 +67,48 @@ const InvoiceProcessor = () => {
     useEffect(() => {
         sessionStorage.setItem('fileBatches', JSON.stringify(fileBatches));
     }, [fileBatches]);
+
+    const loadLicensesToBasket = useCallback(async (licenseIds: string[]) => {
+        try {
+            setLoading(true);
+            setStatusMessage("Loading licenses from history...");
+
+            const response = await axios.post('http://localhost:5000/api/load-licenses', {
+                licenseIds
+            });
+
+            if (response.data.success) {
+                setTotalCollected(response.data.totalCollected);
+                setScanResults(response.data.scanResults);
+
+                // Create a single batch for the loaded history
+                const newBatch: FileBatch = {
+                    fileName: `Loaded from History (${caseNumberToLoad})`,
+                    timestamp: new Date(),
+                    results: response.data.scanResults
+                };
+
+                setFileBatches([newBatch]);
+                setStatusMessage(`Loaded ${licenseIds.length} licenses from history!`);
+            }
+
+            if (onLoadComplete) {
+                onLoadComplete();
+            }
+        } catch (err) {
+            console.error('Error loading licenses:', err);
+            setError('Failed to load licenses from history');
+        } finally {
+            setLoading(false);
+        }
+    }, [onLoadComplete]);
+
+    // Load licenses when licenseIdsToLoad changes
+    useEffect(() => {
+        if (licenseIdsToLoad && licenseIdsToLoad.length > 0) {
+            loadLicensesToBasket(licenseIdsToLoad);
+        }
+    }, [licenseIdsToLoad, loadLicensesToBasket]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -177,6 +225,7 @@ const InvoiceProcessor = () => {
         try {
             setStatusMessage("Processing PDF merge...");
             const response = await axios.get('http://localhost:5000/api/download-all-collected', {
+                params: { caseNumber: caseNumber.trim() },
                 responseType: 'blob'
             });
 
@@ -189,15 +238,20 @@ const InvoiceProcessor = () => {
             link.click();
             link.parentNode?.removeChild(link);
 
+            // Get file path from response headers
+            const filePath = response.headers['x-file-path'] || '';
+
             // Save to history
             const licenseIds = Array.from(scanResults.map(r => r.id));
             await axios.post('http://localhost:5000/api/history', {
                 caseNumber: caseNumber.trim(),
                 licenseIds,
-                fileName
+                fileName,
+                filePath
             });
 
             setStatusMessage("Download started and saved to history!");
+            setCaseNumber(''); // Clear case number after successful download
         } catch (err) {
             console.error(err);
             setError("Failed to download merged PDF.");

@@ -5,6 +5,7 @@ export interface IHistory extends Document {
     licenseIds: string[];
     createdAt: Date;
     fileName: string;
+    filePath?: string; // Path to the saved merged PDF
 }
 
 const HistorySchema: Schema = new Schema(
@@ -22,6 +23,10 @@ const HistorySchema: Schema = new Schema(
         fileName: {
             type: String,
             required: true
+        },
+        filePath: {
+            type: String,
+            required: false
         }
     },
     {

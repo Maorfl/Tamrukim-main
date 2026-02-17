@@ -3,6 +3,8 @@ import axios from 'axios';
 
 interface HistoryProps {
     historyRenderKey: boolean;
+    onEditHistory?: (licenseIds: string[]) => void;
+    setCaseNumber: (caseNumber: string) => void;
 }
 
 interface HistoryEntry {
@@ -13,7 +15,7 @@ interface HistoryEntry {
     createdAt: string;
 }
 
-const History = ({ historyRenderKey }: HistoryProps) => {
+const History = ({ historyRenderKey, onEditHistory, setCaseNumber }: HistoryProps) => {
     const [history, setHistory] = useState<HistoryEntry[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -71,6 +73,32 @@ const History = ({ historyRenderKey }: HistoryProps) => {
         });
     };
 
+    const handleDownload = async (id: string, fileName: string) => {
+        try {
+            const response = await axios.get(`http://localhost:5000/api/history/${id}/download`, {
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', fileName);
+            document.body.appendChild(link);
+            link.click();
+            link.parentNode?.removeChild(link);
+        } catch (err) {
+            console.error('Error downloading PDF:', err);
+            setError('Failed to download PDF');
+        }
+    };
+
+    const handleEdit = (entry: HistoryEntry) => {
+        if (onEditHistory) {
+            onEditHistory(entry.licenseIds);
+            setCaseNumber(entry.caseNumber);
+        }
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center py-20">
@@ -121,9 +149,9 @@ const History = ({ historyRenderKey }: HistoryProps) => {
                 </div>
             )}
 
-            <div className="max-w-7xl mx-auto p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 animate-fadeIn">
+            <div className="max-w-7xl mx-auto p-8 bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-white/20 animate-fadeIn max-h-[75vh] flex flex-col">
             {/* Header */}
-            <div className="flex flex-col md:flex-row justify-between items-center mb-8 pb-8 border-b border-gray-100">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-8 pb-8 border-b border-gray-100 flex-shrink-0">
                 <div>
                     <h2 className="text-3xl font-bold text-gray-800 font-hebrew">
                         היסטוריית מיזוגים
@@ -141,13 +169,13 @@ const History = ({ historyRenderKey }: HistoryProps) => {
             </div>
 
             {error && (
-                <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 font-hebrew" dir="rtl">
+                <div className="mb-6 p-4 bg-red-50 text-red-700 rounded-lg border border-red-200 font-hebrew flex-shrink-0" dir="rtl">
                     {error}
                 </div>
             )}
 
             {/* History List */}
-            <div className="space-y-4">
+            <div className="space-y-2 overflow-y-auto pr-2 flex-1">
                 {history.length === 0 ? (
                     <div className="text-center py-20 text-gray-400 font-hebrew">
                         אין היסטוריה להצגה
@@ -156,7 +184,7 @@ const History = ({ historyRenderKey }: HistoryProps) => {
                     history.map((entry) => (
                         <div
                             key={entry._id}
-                            className="bg-gray-50 rounded-xl p-6 border border-gray-200 hover:shadow-md transition-shadow"
+                            className="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow"
                             dir="rtl"
                         >
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -194,12 +222,26 @@ const History = ({ historyRenderKey }: HistoryProps) => {
                                     </div>
                                 </div>
 
-                                <button
-                                    onClick={() => handleDelete(entry._id)}
-                                    className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-hebrew flex-shrink-0"
-                                >
-                                    מחק
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleEdit(entry)}
+                                        className="px-4 py-2 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition-colors font-hebrew flex-shrink-0"
+                                    >
+                                        ערוך
+                                    </button>
+                                    <button
+                                        onClick={() => handleDownload(entry._id, entry.fileName)}
+                                        className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-lg hover:bg-emerald-100 transition-colors font-hebrew flex-shrink-0"
+                                    >
+                                        הורד PDF
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(entry._id)}
+                                        className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors font-hebrew flex-shrink-0"
+                                    >
+                                        מחק
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))
