@@ -10,7 +10,7 @@ const router = express.Router();
 // Multer Storage Configuration for Direct Uploads
 const licenseStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(process.cwd(), 'uploads');
+        const uploadDir = 'G:\\CUS1\\uploads';
         // Ensure upload directory exists
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });

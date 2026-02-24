@@ -19,7 +19,7 @@ export const getEnrichedLicenseData = async (extractedIds: string[]): Promise<En
     const existingIdsSet = new Set(existingDocs.map(d => d.licenseNumber));
     const missingIds = extractedIds.filter(id => !existingIdsSet.has(id));
 
-    const uploadsDir = path.resolve(process.cwd(), 'uploads');
+    const uploadsDir = 'G:\\CUS1\\uploads';
     const newlyAddedDocs: ILicense[] = [];
 
     // 3. For each missing ID, try to parse the PDF and save to DB

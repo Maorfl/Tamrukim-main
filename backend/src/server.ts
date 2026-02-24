@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from uploads folder
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static('G:\\CUS1\\uploads'));
 
 // Routes
 app.use('/api/licenses', licenseRoutes);
@@ -38,7 +38,7 @@ mongoose
         console.log('✅ Connected to MongoDB');
         app.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`📁 Serving PDFs from: ${path.join(__dirname, '../uploads')}`);
+            console.log(`📁 Serving PDFs from: G:\\CUS1\\uploads`);
         });
     })
     .catch((error) => {

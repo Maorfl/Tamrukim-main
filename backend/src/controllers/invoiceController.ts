@@ -58,7 +58,7 @@ export const downloadAllCollected = async (req: Request, res: Response) => {
             return res.status(400).json({ error: 'No licenses in basket to download.' });
         }
 
-        const uploadsDir = path.resolve(process.cwd(), 'uploads');
+        const uploadsDir = 'G:\\CUS1\\uploads';
         const foundFiles: string[] = [];
 
         for (const num of uniqueNumbers) {

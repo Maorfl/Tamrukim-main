@@ -68,7 +68,7 @@ const sampleLicenses = [
 ];
 
 async function createDummyPDFs() {
-    const uploadsDir = path.join(__dirname, '../uploads');
+    const uploadsDir = 'G:\\CUS1\\uploads';
 
     // Create uploads directory if it doesn't exist
     if (!fs.existsSync(uploadsDir)) {
