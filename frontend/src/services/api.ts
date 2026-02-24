@@ -16,6 +16,13 @@ export const licenseAPI = {
         return response.data;
     },
 
+    checkExists: async (licenseId: string): Promise<{ exists: boolean; data: any }> => {
+        const response = await axios.post(`${API_BASE_URL}/licenses/check-license-exists`, {
+            licenseId
+        });
+        return response.data;
+    },
+
     downloadPDF: (licenseNumber: string): string => {
         return `${API_BASE_URL.replace('/api', '')}/uploads/${licenseNumber}.pdf`;
     }

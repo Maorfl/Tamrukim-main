@@ -1,5 +1,83 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { licenseAPI } from '../services/api';
+
+interface ConfirmModalProps {
+    isOpen: boolean;
+    licenseId: string;
+    productName: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+}
+
+const ConfirmModal: React.FC<ConfirmModalProps> = ({ isOpen, licenseId, productName, onConfirm, onCancel }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fadeIn">
+            {/* Backdrop */}
+            <div 
+                className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                onClick={onCancel}
+            />
+            
+            {/* Modal */}
+            <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 animate-scaleIn" dir="rtl">
+                {/* Warning Icon */}
+                <div className="flex justify-center mb-4">
+                    <div className="bg-amber-100 rounded-full p-4">
+                        <svg className="w-12 h-12 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                </div>
+
+                {/* Title */}
+                <h3 className="text-2xl font-bold text-gray-900 text-center mb-4 font-hebrew">
+                    רישיון קיים במערכת
+                </h3>
+
+                {/* Content */}
+                <div className="space-y-3 mb-6">
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <p className="text-sm text-gray-600 font-hebrew mb-1">מספר רישיון:</p>
+                        <p className="text-xl font-bold font-mono text-indigo-600">{licenseId}</p>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                        <p className="text-sm text-gray-600 font-hebrew mb-1">שם המוצר הנוכחי:</p>
+                        <p className="text-lg font-semibold text-gray-900 font-hebrew">{productName}</p>
+                    </div>
+
+                    <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                        <p className="text-sm text-amber-800 font-hebrew flex items-start gap-2">
+                            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <span>העלאת הקובץ תחליף את הרישיון הקיים במערכת</span>
+                        </p>
+                    </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={onCancel}
+                        className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold font-hebrew hover:bg-gray-200 transition-all"
+                    >
+                        ביטול
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-bold font-hebrew hover:from-amber-600 hover:to-orange-700 shadow-lg shadow-orange-200 transition-all"
+                    >
+                        החלף רישיון
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 const UploadLicense = () => {
     const [id, setId] = useState("");
@@ -7,6 +85,8 @@ const UploadLicense = () => {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [existingLicenseData, setExistingLicenseData] = useState<{ id: string; productName: string } | null>(null);
 
     const isValidId = /^[68]\d{7}$/.test(id);
 
@@ -56,16 +136,47 @@ const UploadLicense = () => {
         setLoading(true);
         setMessage(null);
 
-        const formData = new FormData();
-        formData.append('pdf', file);
-        formData.append('licenseId', id);
-
         try {
+            // Check if license already exists
+            const checkResponse = await licenseAPI.checkExists(id);
+
+            if (checkResponse.exists) {
+                const productName = checkResponse.data?.productName || 'לא ידוע';
+                setExistingLicenseData({ id, productName });
+                setShowConfirmModal(true);
+                setLoading(false);
+                return;
+            }
+
+            // Proceed with upload (new license)
+            await performUpload(false);
+
+        } catch (err: any) {
+            console.error(err);
+            setMessage({
+                type: 'error',
+                text: err.response?.data?.error || 'שגיאה בהעלאת הרישיון.'
+            });
+            setLoading(false);
+        }
+    };
+
+    const performUpload = async (isUpdate: boolean) => {
+        try {
+            const formData = new FormData();
+            formData.append('pdf', file!);
+            formData.append('licenseId', id);
+
             await axios.post('http://localhost:5000/api/licenses/upload-new-license', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' },
             });
 
-            setMessage({ type: 'success', text: `License ${id} uploaded and indexed successfully!` });
+            setMessage({ 
+                type: 'success', 
+                text: isUpdate 
+                    ? `רישיון ${id} עודכן בהצלחה!` 
+                    : `רישיון ${id} נוסף בהצלחה!`
+            });
             setFile(null);
             setId("");
             // Reset file input
@@ -76,18 +187,39 @@ const UploadLicense = () => {
             console.error(err);
             setMessage({
                 type: 'error',
-                text: err.response?.data?.error || 'Failed to upload license.'
+                text: err.response?.data?.error || 'שגיאה בהעלאת הרישיון.'
             });
         } finally {
             setLoading(false);
         }
     };
 
+    const handleConfirmReplace = async () => {
+        setShowConfirmModal(false);
+        setLoading(true);
+        await performUpload(true);
+    };
+
+    const handleCancelReplace = () => {
+        setShowConfirmModal(false);
+        setExistingLicenseData(null);
+        setLoading(false);
+    };
+
     return (
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-gray-800 font-hebrew mb-4 border-b pb-2">
-                הוספת רישיון חדש למערכת
-            </h3>
+        <>
+            <ConfirmModal
+                isOpen={showConfirmModal}
+                licenseId={existingLicenseData?.id || ''}
+                productName={existingLicenseData?.productName || ''}
+                onConfirm={handleConfirmReplace}
+                onCancel={handleCancelReplace}
+            />
+
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 max-w-md w-full">
+                <h3 className="text-xl font-bold text-gray-800 font-hebrew mb-4 border-b pb-2">
+                    הוספת רישיון חדש למערכת
+                </h3>
 
             <div className="space-y-4">
                 {/* ID Input */}
@@ -170,6 +302,7 @@ const UploadLicense = () => {
                 )}
             </div>
         </div>
+        </>
     );
 };
 

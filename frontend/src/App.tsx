@@ -166,7 +166,7 @@ function App() {
 
                 {/* Footer */}
                 <footer className="mt-auto pt-4 text-center">
-                    <div className="inline-block px-6 py-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg">
+                    <div className="inline-block px-5 py-2 bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg">
                         <p className="text-gray-600 font-hebrew" dir="rtl">
                             כספי סוכני מכס ושילוח בינלאומי © 2026
                         </p>

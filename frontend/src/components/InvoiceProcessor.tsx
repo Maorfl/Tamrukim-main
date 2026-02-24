@@ -101,7 +101,7 @@ const InvoiceProcessor = ({ licenseIdsToLoad = [], onLoadComplete, caseNumberToL
         } finally {
             setLoading(false);
         }
-    }, [onLoadComplete]);
+    }, [onLoadComplete, caseNumberToLoad]);
 
     // Load licenses when licenseIdsToLoad changes
     useEffect(() => {
@@ -419,7 +419,7 @@ const InvoiceProcessor = ({ licenseIdsToLoad = [], onLoadComplete, caseNumberToL
                 </div>
 
                 {/* Right Panel: Data Table */}
-                <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col h-[600px]">
+                <div className="lg:col-span-3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden flex flex-col">
                     <div className="p-4 border-b border-gray-100 bg-gray-50/50">
                         <h3 className="font-bold text-gray-800 font-hebrew">
                             דוח סריקה (Live Results)

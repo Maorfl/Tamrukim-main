@@ -40,6 +40,27 @@ const uploadNew = multer({
     }
 });
 
+// Check if license exists
+router.post('/check-license-exists', async (req: Request, res: Response) => {
+    try {
+        const { licenseId } = req.body;
+        
+        if (!licenseId) {
+            return res.status(400).json({ error: 'License ID is required' });
+        }
+
+        const existingLicense = await License.findOne({ licenseNumber: licenseId });
+        
+        res.json({
+            exists: !!existingLicense,
+            data: existingLicense || null
+        });
+    } catch (error) {
+        console.error('Check license error:', error);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
 // New Endpoint: Upload License with specific ID
 router.post('/upload-new-license', uploadNew.single('pdf'), async (req: Request, res: Response) => {
     try {
