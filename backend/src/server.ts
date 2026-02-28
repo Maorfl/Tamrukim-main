@@ -10,7 +10,7 @@ dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/cosmetic-licenses';
+const MONGODB_URI = 'mongodb+srv://maorfl:M0301f1644@maor-cluster.yi54khe.mongodb.net/Tamrukim';
 
 // Middleware
 app.use(cors());
