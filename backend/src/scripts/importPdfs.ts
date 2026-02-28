@@ -14,7 +14,7 @@ import License from '../models/License';
 dotenv.config({ path: path.join(__dirname, '../../.env') });
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/cosmetic-licenses';
-const PDF_DIR = path.join(__dirname, '../../uploads'); // Scanning the uploads folder
+const PDF_DIR = 'G:\\CUS1\\uploads'; // Scanning the uploads folder
 
 // Regex patterns for Hebrew fields
 // Note: Hebrew in PDFs can sometimes be reversed (Visual vs Logical). 

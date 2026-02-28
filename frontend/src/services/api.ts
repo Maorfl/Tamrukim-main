@@ -16,7 +16,39 @@ export const licenseAPI = {
         return response.data;
     },
 
+    checkExists: async (licenseId: string): Promise<{ exists: boolean; data: any }> => {
+        const response = await axios.post(`${API_BASE_URL}/licenses/check-license-exists`, {
+            licenseId
+        });
+        return response.data;
+    },
+
     downloadPDF: (licenseNumber: string): string => {
         return `${API_BASE_URL.replace('/api', '')}/uploads/${licenseNumber}.pdf`;
     }
 };
+
+export const historyAPI = {
+    getAll: async (limit?: number) => {
+        const response = await axios.get(`${API_BASE_URL}/history`, {
+            params: { limit }
+        });
+        return response.data;
+    },
+
+    getById: async (id: string) => {
+        const response = await axios.get(`${API_BASE_URL}/history/${id}`);
+        return response.data;
+    },
+
+    create: async (data: { caseNumber: string; licenseIds: string[]; fileName: string }) => {
+        const response = await axios.post(`${API_BASE_URL}/history`, data);
+        return response.data;
+    },
+
+    delete: async (id: string) => {
+        const response = await axios.delete(`${API_BASE_URL}/history/${id}`);
+        return response.data;
+    }
+};
+

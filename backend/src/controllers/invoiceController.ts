@@ -14,16 +14,51 @@ export const clearBasket = (req: Request, res: Response) => {
     res.json({ message: 'Basket cleared', totalCollected: 0 });
 };
 
+export const loadLicensesToBasket = async (req: Request, res: Response) => {
+    try {
+        const { licenseIds } = req.body;
+
+        if (!licenseIds || !Array.isArray(licenseIds)) {
+            return res.status(400).json({ error: 'licenseIds array is required' });
+        }
+
+        // Clear existing basket and add the new IDs
+        collectedLicenseIds.clear();
+        licenseIds.forEach(id => collectedLicenseIds.add(id));
+
+        // Get enriched data for these licenses
+        const enrichedData = await getEnrichedLicenseData(licenseIds);
+
+        const scanResults = enrichedData.map(d => ({
+            id: d.materialId,
+            productName: d.productName,
+            cleanLicense: d.formattedLicense,
+            shortNotification: d.shortNotification,
+            status: d.hasFile ? 'Available' : 'Missing'
+        }));
+
+        res.json({
+            success: true,
+            scanResults,
+            totalCollected: collectedLicenseIds.size
+        });
+    } catch (error) {
+        console.error('Error loading licenses to basket:', error);
+        res.status(500).json({ error: 'Failed to load licenses' });
+    }
+};
+
 export const downloadAllCollected = async (req: Request, res: Response) => {
     try {
         const uniqueNumbers = Array.from(collectedLicenseIds);
-        console.log(`Downloading all collected: ${uniqueNumbers.length} IDs`);
+        const caseNumber = req.query.caseNumber as string;
+        console.log(`Downloading all collected: ${uniqueNumbers.length} IDs for case ${caseNumber}`);
 
         if (uniqueNumbers.length === 0) {
             return res.status(400).json({ error: 'No licenses in basket to download.' });
         }
 
-        const uploadsDir = path.resolve(process.cwd(), 'uploads');
+        const uploadsDir = 'G:\\CUS1\\uploads';
         const foundFiles: string[] = [];
 
         for (const num of uniqueNumbers) {
@@ -43,8 +78,22 @@ export const downloadAllCollected = async (req: Request, res: Response) => {
 
         const mergedPdfBytes = await mergePdfs(foundFiles);
 
+        // Save the PDF to history folder if caseNumber is provided
+        if (caseNumber && caseNumber.trim() !== '') {
+            const historyDir = path.resolve(process.cwd(), 'history');
+            await fs.ensureDir(historyDir);
+            
+            const fileName = `merged_licenses_${caseNumber}_${Date.now()}.pdf`;
+            const filePath = path.join(historyDir, fileName);
+            await fs.writeFile(filePath, Buffer.from(mergedPdfBytes));
+            
+            // Store in response headers so frontend can access it
+            res.setHeader('X-File-Name', fileName);
+            res.setHeader('X-File-Path', filePath);
+        }
+
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename=merged_licenses_${Date.now()}.pdf`);
+        res.setHeader('Content-Disposition', `attachment; filename=merged_licenses_${caseNumber || Date.now()}.pdf`);
         res.send(Buffer.from(mergedPdfBytes));
 
     } catch (error) {

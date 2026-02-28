@@ -10,7 +10,7 @@ const router = express.Router();
 // Multer Storage Configuration for Direct Uploads
 const licenseStorage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(process.cwd(), 'uploads');
+        const uploadDir = 'G:\\CUS1\\uploads';
         // Ensure upload directory exists
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
@@ -37,6 +37,27 @@ const uploadNew = multer({
     fileFilter: (req, file, cb) => {
         if (file.mimetype === 'application/pdf') cb(null, true);
         else cb(null, false);
+    }
+});
+
+// Check if license exists
+router.post('/check-license-exists', async (req: Request, res: Response) => {
+    try {
+        const { licenseId } = req.body;
+        
+        if (!licenseId) {
+            return res.status(400).json({ error: 'License ID is required' });
+        }
+
+        const existingLicense = await License.findOne({ licenseNumber: licenseId });
+        
+        res.json({
+            exists: !!existingLicense,
+            data: existingLicense || null
+        });
+    } catch (error) {
+        console.error('Check license error:', error);
+        res.status(500).json({ error: 'Server error' });
     }
 });
 

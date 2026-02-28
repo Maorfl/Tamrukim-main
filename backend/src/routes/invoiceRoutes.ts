@@ -2,7 +2,7 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { processInvoice, downloadAllCollected, clearBasket } from '../controllers/invoiceController';
+import { processInvoice, downloadAllCollected, clearBasket, loadLicensesToBasket } from '../controllers/invoiceController';
 
 const router = express.Router();
 
@@ -40,5 +40,8 @@ router.get('/download-all-collected', downloadAllCollected);
 
 // POST /api/clear-basket
 router.post('/clear-basket', clearBasket);
+
+// POST /api/load-licenses
+router.post('/load-licenses', loadLicensesToBasket);
 
 export default router;

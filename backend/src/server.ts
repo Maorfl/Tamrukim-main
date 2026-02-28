@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import path from 'path';
 import licenseRoutes from './routes/licenseRoutes';
 import invoiceRoutes from './routes/invoiceRoutes';
+import historyRoutes from './routes/historyRoutes';
 
 dotenv.config();
 
@@ -18,11 +19,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from uploads folder
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+app.use('/uploads', express.static('G:\\CUS1\\uploads'));
 
 // Routes
 app.use('/api/licenses', licenseRoutes);
 app.use('/api', invoiceRoutes);
+app.use('/api/history', historyRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -36,7 +38,7 @@ mongoose
         console.log('✅ Connected to MongoDB');
         app.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`📁 Serving PDFs from: ${path.join(__dirname, '../uploads')}`);
+            console.log(`📁 Serving PDFs from: G:\\CUS1\\uploads`);
         });
     })
     .catch((error) => {
